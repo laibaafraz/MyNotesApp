@@ -104,4 +104,4 @@ Run `flutter doctor` first if anything fails, to check your setup.
 
 ## Author
 
-Built by **<laiba afraz>** while learning Flutter.
+Built by **<laibaafraz>** while learning Flutter.
