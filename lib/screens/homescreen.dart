@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:notesapp/screens/createnotesscreen.dart';
 import 'package:notesapp/models/notes.dart';
 import 'package:notesapp/screens/viewnotescreen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Homescreen extends StatefulWidget {
   const Homescreen({super.key});
@@ -12,6 +15,28 @@ class Homescreen extends StatefulWidget {
 
 class _HomescreenState extends State<Homescreen> {
   List<Note> notes = [];  
+  @override
+void initState() {
+  super.initState();
+  loadNotes(); 
+}
+
+Future<void> saveNotes() async {
+  final prefs = await SharedPreferences.getInstance();
+  final data = jsonEncode(notes.map((n) => n.toMap()).toList());
+  await prefs.setString('notes', data);
+}
+
+Future<void> loadNotes() async {
+  final prefs = await SharedPreferences.getInstance();
+  final data = prefs.getString('notes');
+  if (data != null) {
+    final list = jsonDecode(data) as List;
+    setState(() {
+      notes = list.map((e) => Note.fromMap(e)).toList();
+    });
+  }
+}
 
   void addNote() async {
     final result = await Navigator.push(
@@ -21,7 +46,10 @@ class _HomescreenState extends State<Homescreen> {
     if (result != null && result is Note) {
       setState(() {
         notes.add(result);
-      });
+  
+      }
+      );
+      saveNotes();
     }
   }
   void editNote(int index) async {
@@ -40,7 +68,9 @@ class _HomescreenState extends State<Homescreen> {
   void deleteNote(int index) {
     setState(() {
       notes.removeAt(index);
+      
     });
+    saveNotes();
   }
   @override
   Widget build(BuildContext context) {
@@ -96,19 +126,12 @@ class _HomescreenState extends State<Homescreen> {
                     ),
                     trailing: IconButton(onPressed: () => deleteNote(index), icon: Icon(Icons.delete, color:  Colors.red)),
                     onTap: () async {
-              final updatedNote = await Navigator.push(
-                   context,
-    MaterialPageRoute(builder: (context) => ViewNoteScreen(note: notes[index])),
-  );
+                    final updatedNote = await Navigator.push(
+                   context, MaterialPageRoute(builder: (context) => ViewNoteScreen(note: notes[index])), );
 
-  if (updatedNote != null && updatedNote is Note) {
-    setState(() {
-      notes[index] = updatedNote;
-    });
-  }
-},
-             
-          );
+                   if (updatedNote != null && updatedNote is Note) {
+                          setState(() {
+                          notes[index] = updatedNote;}); saveNotes();}}, );
         }),
   
   floatingActionButton: FloatingActionButton(
